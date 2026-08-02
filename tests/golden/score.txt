@@ -1,0 +1,188 @@
+ARCHETYPE MAP
+  root: fixtures
+
+  Archetype                                 Repos  Repositories
+  java / maven / spring-boot                2      customer-portal, inventory-api
+  dotnet / msbuild / no framework detected  1      reporting-tool
+  go / go-modules / no framework detected   1      notify-worker
+  java / maven / no framework detected      1      legacy-batch
+  javascript / npm / react                  1      web-frontend
+  python / pip-requirements / fastapi       1      invoicing-api
+  python / pyproject / fastapi              1      orders-api
+
+  8 repositories fall into 7 archetypes.
+  Mean repositories per archetype: 1.14
+  Reuse factor: 0.12
+  The reuse factor is the share of repositories that are not the first of
+  their archetype — the share whose onboarding can draw on work already
+  done. It is arithmetic over the grouping. It does not measure how much of
+  that work is genuinely reusable, which is a judgement about how alike
+  two repositories are beyond their build manifest.
+
+  Skipped — no recognised build manifest at the repository root:
+    platform-docs: no recognised build manifest at the repository root
+
+PER-ARCHETYPE FACT SHEETS
+
+------------------------------------------------------------------------------
+java / maven / spring-boot  (2 repositories)
+
+  customer-portal
+    build manifests:      pom.xml
+    lockfile:             n/a — this build system has no lockfile
+    dependencies pinned:  3/3 (100%)
+    container build:      Dockerfile
+    declared runtime:     java 17 (pom.xml) — supported, end of support 2027-10-31
+    test files:           1 test / 2 source files — ratio 0.50
+    test command:         mvn -B test  [Maven lifecycle (exists whether or not tests do)]
+    coverage config:      jacoco
+    CI:                   jenkins — references tests
+    analysis tooling:     checkstyle
+
+  inventory-api
+    build manifests:      pom.xml
+    lockfile:             n/a — this build system has no lockfile
+    dependencies pinned:  1/4 (25%)
+    container build:      none
+    declared runtime:     java 17 (pom.xml) — supported, end of support 2027-10-31
+    test files:           1 test / 1 source files — ratio 1.00
+    test command:         mvn -B test  [Maven lifecycle (exists whether or not tests do)]
+    coverage config:      none
+    CI:                   none
+    analysis tooling:     none
+
+------------------------------------------------------------------------------
+dotnet / msbuild / no framework detected  (1 repository)
+
+  reporting-tool
+    build manifests:      ReportingTool.csproj
+    lockfile:             none
+    dependencies pinned:  2/2 (100%)
+    container build:      none
+    declared runtime:     dotnet 6.0 (ReportingTool.csproj) — PAST END OF SUPPORT, end of support 2024-11-12
+    test files:           0 test / 2 source files — ratio 0.00
+    test command:         dotnet test  [dotnet CLI (exists whether or not tests do)]
+    coverage config:      none
+    CI:                   none
+    analysis tooling:     none
+
+------------------------------------------------------------------------------
+go / go-modules / no framework detected  (1 repository)
+
+  notify-worker
+    build manifests:      go.mod
+    lockfile:             go.sum
+    dependencies pinned:  2/2 (100%)
+    container build:      Dockerfile
+    declared runtime:     go 1.22 (go.mod) — not in the support table
+    test files:           1 test / 2 source files — ratio 0.50
+    test command:         go test ./...  [Go toolchain (exists whether or not tests do)]
+    coverage config:      none
+    CI:                   none
+    analysis tooling:     none
+
+------------------------------------------------------------------------------
+java / maven / no framework detected  (1 repository)
+
+  legacy-batch
+    build manifests:      pom.xml
+    lockfile:             n/a — this build system has no lockfile
+    dependencies pinned:  2/2 (100%)
+    container build:      none
+    declared runtime:     java 8 (pom.xml) — supported, end of support 2026-11-30
+    test files:           0 test / 2 source files — ratio 0.00
+    test command:         mvn -B test  [Maven lifecycle (exists whether or not tests do)]
+    coverage config:      none
+    CI:                   none
+    analysis tooling:     none
+
+------------------------------------------------------------------------------
+javascript / npm / react  (1 repository)
+
+  web-frontend
+    build manifests:      package.json
+    lockfile:             package-lock.json
+    dependencies pinned:  3/5 (60%)
+    container build:      none
+    declared runtime:     node 18 (package.json engines.node) — PAST END OF SUPPORT, end of support 2025-04-30
+    test files:           1 test / 2 source files — ratio 0.50
+    test command:         npm test  [package.json scripts.test = 'jest --collectCoverage']
+    coverage config:      jest
+    CI:                   github-actions — references tests
+    analysis tooling:     eslint
+
+------------------------------------------------------------------------------
+python / pip-requirements / fastapi  (1 repository)
+
+  invoicing-api
+    build manifests:      requirements.txt
+    lockfile:             none
+    dependencies pinned:  0/4 (0%)
+    container build:      none
+    declared runtime:     python 3.9 (.python-version) — PAST END OF SUPPORT, end of support 2025-10-31
+    test files:           0 test / 4 source files — ratio 0.00
+    test command:         could not be inferred
+    coverage config:      none
+    CI:                   none
+    analysis tooling:     none
+
+------------------------------------------------------------------------------
+python / pyproject / fastapi  (1 repository)
+
+  orders-api
+    build manifests:      pyproject.toml
+    lockfile:             uv.lock
+    dependencies pinned:  6/6 (100%)
+    container build:      Dockerfile
+    declared runtime:     python 3.12 (pyproject.toml requires-python) — supported, end of support 2028-10-31
+    test files:           2 test / 3 source files — ratio 0.67
+    test command:         pytest  [pytest declared in project configuration]
+    coverage config:      pytest-cov
+    CI:                   github-actions — references tests
+    analysis tooling:     ruff
+
+READINESS RUBRIC — brownfield-agentic-readiness v1 (as of 2026-08-02)
+
+ESTATE-LEVEL DIMENSIONS
+  Archetype concentration: L0 fragmented
+    8 repositories across 7 archetypes; reuse factor 0.12
+  Data and IP governance constraint: —
+    requires human assessment — no signal for this exists in a repository
+  Adoption readiness: —
+    requires human assessment — no signal for this exists in a repository
+
+PER-REPOSITORY DIMENSIONS
+  Repository       buildability                 testability           guardrail coverage
+  customer-portal  L3 reproducible-environment  L3 tests-gated        L3 analysis-in-pipeline
+  inventory-api    L1 manifest-only             L2 tests-runnable     L0 no-automation
+  invoicing-api    L1 manifest-only             L0 no-tests-detected  L0 no-automation
+  legacy-batch     L2 pinned                    L0 no-tests-detected  L0 no-automation
+  notify-worker    L3 reproducible-environment  L2 tests-runnable     L0 no-automation
+  orders-api       L3 reproducible-environment  L3 tests-gated        L3 analysis-in-pipeline
+  reporting-tool   L2 pinned                    L0 no-tests-detected  L0 no-automation
+  web-frontend     L2 pinned                    L3 tests-gated        L3 analysis-in-pipeline
+
+WORST LEVEL WITHIN EACH ARCHETYPE
+  The binding repository, not the average one. An archetype is onboarded
+  against its weakest member, because that is the one that stops.
+  Archetype                        buildability                 testability           guardrail coverage
+  java/maven/spring-boot           L1 manifest-only             L2 tests-runnable     L0 no-automation
+  dotnet/msbuild/none              L2 pinned                    L0 no-tests-detected  L0 no-automation
+  go/go-modules/none               L3 reproducible-environment  L2 tests-runnable     L0 no-automation
+  java/maven/none                  L2 pinned                    L0 no-tests-detected  L0 no-automation
+  javascript/npm/react             L2 pinned                    L3 tests-gated        L3 analysis-in-pipeline
+  python/pip-requirements/fastapi  L1 manifest-only             L0 no-tests-detected  L0 no-automation
+  python/pyproject/fastapi         L3 reproducible-environment  L3 tests-gated        L3 analysis-in-pipeline
+
+NOT SCORED HERE
+  Dimensions marked — require human assessment. They are unscored, not zero:
+  treating an unasked question as a bad answer would let an assessment be
+  improved by declining to ask. There is also no composite score, on purpose.
+  Averaging a blocked dimension against three healthy ones ranks a blocked
+  estate above a mediocre unblocked one, which inverts the decision.
+
+WHAT THIS SCAN DID NOT DO
+  It did not run a build, run a test, resolve a dependency or open a network
+  connection. Every line above is file evidence. Runtime support was judged
+  against a table dated 2026-08-02, not against today.
+  See the README section 'What the scanner cannot tell you'.

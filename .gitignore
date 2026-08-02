@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Editors
+.idea/
+.vscode/
+.DS_Store
+
+# Note what is deliberately NOT ignored. `fixtures/` contains committed
+# lockfiles, a `node_modules`-free `package-lock.json`, `.csproj` files and a
+# `pom.xml` — normally build detritus, here the evidence the scanner is tested
+# against. `tests/golden/` holds the CLI output the README quotes; regenerating
+# it silently would defeat the test that guards it.

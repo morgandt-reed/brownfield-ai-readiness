@@ -1,0 +1,115 @@
+---
+# Published end-of-support dates for language runtimes, transcribed from the
+# vendor or project page named in each entry.
+#
+# Three things to know before using this file.
+#
+# 1. These dates are transcribed, not derived. They move. The file is dated so
+#    that a reader can see how stale it is and check the source URL, and the
+#    scanner prints the as-of date next to every conclusion it draws from here.
+#
+# 2. The scanner compares a repository's declared runtime against `as_of` below,
+#    not against today's date. That makes a scan reproducible: the same tree
+#    scanned a year from now gives the same answer, and the answer changes when
+#    somebody updates this file, which is a reviewable commit.
+#
+# 3. A runtime with no entry here is reported as `unknown`, never as supported.
+#    This is a list of what was looked up, not a list of what exists. Go is
+#    deliberately absent: its support policy is "the two most recent releases"
+#    with no published calendar date per version, so there is nothing to
+#    transcribe, and inventing one would be worse than reporting `unknown`.
+#
+# Java is the awkward case. There is no single end-of-support date for a Java
+# version — it depends on the distribution and the support contract. The dates
+# below are Eclipse Temurin's community support, which is the default for an
+# organisation with no commercial JDK agreement. An organisation with one should
+# replace this file and pass it with --support-table.
+as_of: 2026-08-02
+
+runtimes:
+  - runtime: python
+    version: "3.8"
+    end_of_support: 2024-10-07
+    source: https://devguide.python.org/versions/
+  - runtime: python
+    version: "3.9"
+    end_of_support: 2025-10-31
+    source: https://devguide.python.org/versions/
+  - runtime: python
+    version: "3.10"
+    end_of_support: 2026-10-31
+    source: https://devguide.python.org/versions/
+  - runtime: python
+    version: "3.11"
+    end_of_support: 2027-10-31
+    source: https://devguide.python.org/versions/
+  - runtime: python
+    version: "3.12"
+    end_of_support: 2028-10-31
+    source: https://devguide.python.org/versions/
+  - runtime: python
+    version: "3.13"
+    end_of_support: 2029-10-31
+    source: https://devguide.python.org/versions/
+
+  - runtime: node
+    version: "16"
+    end_of_support: 2023-09-11
+    source: https://github.com/nodejs/release
+  - runtime: node
+    version: "18"
+    end_of_support: 2025-04-30
+    source: https://github.com/nodejs/release
+  - runtime: node
+    version: "20"
+    end_of_support: 2026-04-30
+    source: https://github.com/nodejs/release
+  - runtime: node
+    version: "22"
+    end_of_support: 2027-04-30
+    source: https://github.com/nodejs/release
+  - runtime: node
+    version: "24"
+    end_of_support: 2028-04-30
+    source: https://github.com/nodejs/release
+
+  - runtime: java
+    version: "8"
+    end_of_support: 2026-11-30
+    source: https://adoptium.net/support/
+    note: >-
+      Eclipse Temurin community support. Oracle's public updates for Java 8
+      ended in 2019; several vendors sell extended support well beyond this
+      date. Replace this file if a support contract applies.
+  - runtime: java
+    version: "11"
+    end_of_support: 2027-10-31
+    source: https://adoptium.net/support/
+    note: Eclipse Temurin community support.
+  - runtime: java
+    version: "17"
+    end_of_support: 2027-10-31
+    source: https://adoptium.net/support/
+    note: Eclipse Temurin community support.
+  - runtime: java
+    version: "21"
+    end_of_support: 2029-12-31
+    source: https://adoptium.net/support/
+    note: Eclipse Temurin community support.
+
+  - runtime: dotnet
+    version: "6.0"
+    end_of_support: 2024-11-12
+    source: https://dotnet.microsoft.com/platform/support/policy/dotnet-core
+  - runtime: dotnet
+    version: "7.0"
+    end_of_support: 2024-05-14
+    source: https://dotnet.microsoft.com/platform/support/policy/dotnet-core
+  - runtime: dotnet
+    version: "8.0"
+    end_of_support: 2026-11-10
+    source: https://dotnet.microsoft.com/platform/support/policy/dotnet-core
+  - runtime: dotnet
+    version: "9.0"
+    end_of_support: 2026-05-12
+    source: https://dotnet.microsoft.com/platform/support/policy/dotnet-core

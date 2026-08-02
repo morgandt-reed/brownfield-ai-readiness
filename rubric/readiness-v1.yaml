@@ -1,0 +1,313 @@
+---
+# Brownfield agentic-readiness rubric, version 1.
+#
+# Six dimensions. Four have a machine-detectable component; two do not have one
+# at all and are marked so, rather than being quietly dropped because they were
+# inconvenient to automate. The two that cannot be automated are frequently the
+# two that decide whether the work happens.
+#
+# There is deliberately no composite score. See `scoring_policy` at the bottom.
+version: 1
+id: brownfield-agentic-readiness
+as_of: 2026-08-02
+
+dimensions:
+  - id: buildability
+    title: Buildability
+    scope: repository
+    assessment: mixed
+    question: >-
+      Can a machine that has never seen this repository produce the same
+      artefact as the last person who built it?
+    why_it_matters: >-
+      An agent that cannot build cannot check its own work. Every gate
+      downstream of the build inherits the build's reproducibility, so an
+      irreproducible build caps every other dimension regardless of how good
+      the tests are.
+    machine_evidence:
+      - A build manifest at the repository root.
+      - A lockfile, where the ecosystem has the concept.
+      - The share of direct dependencies declared at an exact version.
+      - A container or devcontainer build definition.
+    human_evidence:
+      - Whether the build actually succeeds from a clean checkout, which is the
+        only question that matters and the one no file listing answers.
+      - Whether it needs credentials, an internal artefact repository, a
+        licensed toolchain or a specific machine.
+      - How long it takes. A forty-minute build changes what an agent loop can
+        do, without changing any signal listed above.
+    levels:
+      - level: 0
+        name: no-build-definition
+        definition: No build manifest was found at the repository root.
+        evidence_to_reach: n/a — this is the floor.
+      - level: 1
+        name: manifest-only
+        definition: >-
+          A build manifest exists, but dependency resolution is free to drift:
+          no lockfile and fewer than 80% of direct dependencies pinned.
+        evidence_to_reach: A build manifest at the repository root.
+      - level: 2
+        name: pinned
+        definition: >-
+          Dependency resolution is fixed, by a lockfile or by pinning at least
+          80% of direct dependencies.
+        evidence_to_reach: >-
+          Add a lockfile, or pin the remaining floating dependency declarations.
+      - level: 3
+        name: reproducible-environment
+        definition: >-
+          Dependencies are fixed and the environment the build runs in is
+          declared in the repository as well.
+        evidence_to_reach: >-
+          Add a Dockerfile, Containerfile or devcontainer definition that builds
+          the project, on top of level 2.
+
+  - id: testability
+    title: Testability
+    scope: repository
+    assessment: mixed
+    question: >-
+      Is there an oracle an agent can consult before it proposes a change, and
+      can it be invoked without a human explaining how?
+    why_it_matters: >-
+      This is the constraint. Autonomy is bounded by the strength of the signal
+      that says a change is wrong, and in a codebase without tests that signal
+      does not exist. The choice is then to build characterisation tests first —
+      routinely the larger half of the work — or to run the agent blind.
+    machine_evidence:
+      - Files matching the ecosystem's test conventions.
+      - Whether a test command can be inferred, and from what.
+      - Coverage instrumentation declared in project configuration.
+      - Whether a CI configuration references running tests.
+    human_evidence:
+      - Whether the suite passes today. Presence is not health.
+      - Whether it asserts behaviour or merely executes code. A high-coverage
+        suite with no meaningful assertions is a worse oracle than no suite,
+        because it is trusted.
+      - Flakiness, and the local convention for tolerating it.
+      - Test data availability, and whether it contains personal data that must
+        be anonymised before any of it can be used in a development loop.
+      - Whether the parts of the system that carry business risk are the parts
+        that are tested.
+    levels:
+      - level: 0
+        name: no-tests-detected
+        definition: No files matched the ecosystem's test conventions.
+        evidence_to_reach: n/a — this is the floor.
+      - level: 1
+        name: tests-present
+        definition: >-
+          Test files exist, but no runner is declared anywhere a scanner can
+          find it, so how to execute them is tribal knowledge.
+        evidence_to_reach: Write tests in the conventional location.
+      - level: 2
+        name: tests-runnable
+        definition: Test files exist and a test command can be inferred.
+        evidence_to_reach: >-
+          Declare the test runner in project configuration, so the command is a
+          fact about the repository rather than about the last person to run it.
+      - level: 3
+        name: tests-gated
+        definition: >-
+          Level 2, plus coverage instrumentation configured, plus a CI
+          configuration that references running the tests.
+        evidence_to_reach: >-
+          Wire the suite into CI and configure coverage measurement. Note that
+          this level says the gate exists, never that it is enforced or that
+          anyone acts on a failure.
+
+  - id: archetype_concentration
+    title: Archetype concentration
+    scope: estate
+    assessment: machine
+    question: >-
+      How many distinct onboarding problems does this estate contain, as
+      opposed to how many repositories?
+    why_it_matters: >-
+      Onboarding work is done per archetype and reused per repository. An estate
+      that collapses into a handful of technology families is a fundamentally
+      cheaper piece of work than the same repository count spread across a
+      family each, and the difference is a multiplier rather than a margin.
+    machine_evidence:
+      - The count of distinct language / build system / framework groupings.
+      - The reuse factor — the share of repositories that are not the first of
+        their archetype.
+    human_evidence:
+      - Whether repositories sharing an archetype actually share conventions.
+        Two Spring Boot services can have nothing else in common, and the
+        grouping will not show it.
+      - Whether one archetype carries all the business risk, which changes where
+        the work should start regardless of the arithmetic.
+    levels:
+      - level: 0
+        name: fragmented
+        definition: Reuse factor below 0.25 — most repositories are their own archetype.
+        evidence_to_reach: n/a — this is the floor.
+      - level: 1
+        name: mixed
+        definition: Reuse factor from 0.25 to below 0.50.
+        evidence_to_reach: >-
+          Not a matter of adding evidence. The level moves by consolidating the
+          estate, or by scoping the work to a subset of it.
+      - level: 2
+        name: concentrated
+        definition: Reuse factor from 0.50 to below 0.75.
+        evidence_to_reach: As above.
+      - level: 3
+        name: highly-concentrated
+        definition: Reuse factor of 0.75 or above.
+        evidence_to_reach: As above.
+
+  - id: guardrail_coverage
+    title: Guardrail coverage
+    scope: repository
+    assessment: mixed
+    question: >-
+      What automated checks stand between a proposed change and the main branch?
+    why_it_matters: >-
+      Autonomy is granted against gates, not against good intentions. The
+      question splits three ways — quality guardrails, application security, and
+      data governance — and only the first two leave any trace in a repository.
+    machine_evidence:
+      - CI configuration files, by system.
+      - Whether that configuration references running tests.
+      - Static analysis, linting, SAST, SCA and dependency-update configuration
+        present by filename.
+    human_evidence:
+      - Whether the gates are enforced. Branch protection is a server-side
+        setting and is not in the checkout.
+      - Whether a failing gate blocks a merge or is routinely overridden, and
+        who can override it.
+      - Which of the three meanings of "security" the organisation is actually
+        asking about, and their relative weight.
+      - Whether the security tooling is wired into the pull-request loop or runs
+        nightly against a report nobody opens.
+    levels:
+      - level: 0
+        name: no-automation
+        definition: No CI configuration found in the repository.
+        evidence_to_reach: n/a — this is the floor.
+      - level: 1
+        name: pipeline-present
+        definition: A CI configuration exists but does not appear to run tests.
+        evidence_to_reach: Add a pipeline definition to the repository.
+      - level: 2
+        name: tests-in-pipeline
+        definition: A CI configuration exists and references running tests.
+        evidence_to_reach: Invoke the test suite from the pipeline.
+      - level: 3
+        name: analysis-in-pipeline
+        definition: >-
+          Level 2, plus at least one static analysis, security or
+          dependency-scanning tool configured in the repository.
+        evidence_to_reach: >-
+          Add linting, SAST, SCA or automated dependency updates. Presence of
+          configuration only; whether the tool blocks anything is human evidence.
+
+  - id: data_governance_constraint
+    title: Data and IP governance constraint
+    scope: estate
+    assessment: human
+    question: >-
+      Where is this source code permitted to go, and who decided?
+    why_it_matters: >-
+      This is a binary gate on the whole programme, not a dimension that trades
+      off against the others. If the code may not leave a defined boundary, the
+      set of viable deployment models collapses first and everything else is
+      designed inside what remains. Discovering it late invalidates the design
+      rather than adjusting it.
+    machine_evidence: []
+    human_evidence:
+      - The specific obligation, named — which regulation, which contract,
+        which clause. An unnamed constraint should be treated as an absent one,
+        and an unnamed permission as an absent one too.
+      - Whether inference may be performed outside the perimeter, and by whom.
+      - Whether the code may be used as training data, and what the provider
+        commits to in writing.
+      - Retention and logging obligations on prompts and completions.
+      - Whether personal data appears in test fixtures, which is a separate
+        constraint from the source code itself and is often the binding one.
+    levels:
+      - level: 0
+        name: unestablished
+        definition: >-
+          Nobody has been asked, or the answers conflict between the people who
+          would have to sign.
+        evidence_to_reach: n/a — this is the floor.
+      - level: 1
+        name: identified
+        definition: The constraint is understood and stated, but is not written down anywhere.
+        evidence_to_reach: An answer from someone accountable for it.
+      - level: 2
+        name: documented
+        definition: >-
+          A written policy names permitted destinations for source code and
+          prompts.
+        evidence_to_reach: A signed-off policy naming destinations, not principles.
+      - level: 3
+        name: enforced
+        definition: A technical control prevents the policy being breached by accident.
+        evidence_to_reach: >-
+          Egress controls, an approved gateway, or tenancy configuration that
+          makes the prohibited path unavailable rather than discouraged.
+
+  - id: adoption_readiness
+    title: Adoption readiness
+    scope: estate
+    assessment: human
+    question: >-
+      Who has agreed to change how they work, and what have they given up to
+      do it?
+    why_it_matters: >-
+      Tooling that is technically correct and unused has failed, and it fails
+      in a way that looks like success right up to the point where usage is
+      measured. This dimension is the one most often left out of an
+      assessment because it is the only one with no artefact to inspect.
+    machine_evidence: []
+    human_evidence:
+      - A named owning team with time allocated, as opposed to a sponsor.
+      - Prior experience with assisted development, and what came of it.
+      - Whether the review workflow will change, and who has approved that.
+      - A stated success criterion, and a baseline measured before anything is
+        rolled out. Without a baseline the outcome is unfalsifiable in both
+        directions.
+      - Whether the pilot team was chosen because it is representative or
+        because it is enthusiastic.
+    levels:
+      - level: 0
+        name: unsponsored
+        definition: No named owner, no allocated time.
+        evidence_to_reach: n/a — this is the floor.
+      - level: 1
+        name: individual-experimentation
+        definition: >-
+          Developers are using assistants informally. There is no mandate and no
+          shared configuration.
+        evidence_to_reach: Nothing needs to be done; this happens on its own.
+      - level: 2
+        name: owned
+        definition: A named team owns the work and has budgeted time for it.
+        evidence_to_reach: An owner who can decline other work to do this.
+      - level: 3
+        name: measured
+        definition: >-
+          Level 2, plus a stated success criterion and a baseline captured
+          before rollout.
+        evidence_to_reach: >-
+          Agree what would count as failure, and measure the current state
+          before changing it.
+
+scoring_policy:
+  composite: refused
+  rationale: >-
+    Dimensions are not commensurable and averaging them destroys the
+    information that matters. An estate at level 3 on buildability, archetype
+    concentration and guardrails and level 0 on data governance is not
+    three-quarters ready; it is blocked. A single number would rank it above an
+    estate that is mediocre everywhere and blocked nowhere, which inverts the
+    correct decision. The report therefore prints six levels and no total.
+  human_dimensions_are_not_zero: >-
+    A dimension marked `requires human assessment` is reported as unscored, not
+    as level 0. Treating an unanswered question as a bad answer would let an
+    assessment be improved by declining to ask.

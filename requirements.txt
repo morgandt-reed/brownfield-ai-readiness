@@ -1,0 +1,11 @@
+# Runtime dependencies. Two, both pure Python. Click is the CLI; PyYAML reads
+# the rubric and the runtime support table. The detection and scoring layers
+# have none: they are string matching and threshold comparisons over the
+# standard library, which is what makes the output auditable by reading it.
+click>=8.1
+PyYAML>=6.0
+
+# Development and CI.
+pytest>=8.0
+pytest-cov>=5.0
+ruff==0.6.9

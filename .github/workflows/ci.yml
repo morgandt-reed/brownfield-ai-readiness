@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+  # Pinned: ruff's default rule set moves between releases, and an unpinned
+  # linter turns a green build red with no commit behind it.
+  RUFF_VERSION: "0.6.9"
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ruff
+        run: pip install "ruff==${RUFF_VERSION}"
+
+      # Rules, line length and the fixtures/ exclusion come from pyproject.toml.
+      # No --ignore, no `|| true`.
+      - name: Run Ruff
+        run: ruff check .
+
+      - name: Run Ruff Format Check
+        run: ruff format --check .
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # The coverage floor is in pyproject.toml.
+      - name: Run tests
+        run: pytest
+
+  provenance:
+    name: Every published end-of-support date is traceable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      # Run separately from the main suite so this failure is legible in the
+      # checks list rather than buried. The claim it defends is the one this
+      # repository would most deserve to be disbelieved for getting wrong: that
+      # every date it prints about somebody's estate can be traced to a page.
+      - name: Provenance
+        run: pytest tests/test_runtimes.py::TestProvenanceIsEnforced -v --no-cov
+
+  scanner:
+    name: The scanner runs against the committed fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install
+        run: pip install -e .
+
+      # Every command the README shows, run exactly as written.
+      - name: brownfield-scan scan
+        run: brownfield-scan scan fixtures
+
+      - name: brownfield-scan score
+        run: brownfield-scan score fixtures
+
+      - name: brownfield-scan rubric
+        run: brownfield-scan rubric
+
+      # Both output formats, because the JSON projection is a separate code path
+      # and a consumer parsing it deserves the same guarantee as a human reading
+      # the text. `python -m json.tool` fails on anything that is not valid JSON.
+      - name: JSON output is valid JSON
+        run: |
+          brownfield-scan scan fixtures --format json | python -m json.tool > /dev/null
+          brownfield-scan score fixtures --format json | python -m json.tool > /dev/null
+          brownfield-scan rubric --format json | python -m json.tool > /dev/null
+
+      # The README quotes these files verbatim. If the rendering changes, the
+      # golden files change, and this fails until the README and the tool are
+      # updated together. A README documenting a CLI it has drifted away from is
+      # worse than no README: a reader cannot tell which half is stale.
+      - name: The committed output matches the CLI
+        run: |
+          brownfield-scan scan fixtures > /tmp/scan.txt
+          diff -u tests/golden/scan.txt /tmp/scan.txt
+          brownfield-scan score fixtures > /tmp/score.txt
+          diff -u tests/golden/score.txt /tmp/score.txt
+
+      # A scan of the same tree twice must be byte-identical. If the report
+      # ordering depended on filesystem iteration order or a clock, it could not
+      # be diffed between two points in time, which is most of what an estate
+      # assessment is for.
+      - name: A scan is reproducible
+        run: |
+          brownfield-scan scan fixtures --format json > /tmp/first.json
+          brownfield-scan scan fixtures --format json > /tmp/second.json
+          diff -u /tmp/first.json /tmp/second.json

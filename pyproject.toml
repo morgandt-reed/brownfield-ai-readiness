@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brownfield-ai-readiness"
+version = "0.1.0"
+description = "An assessment method, and a scanner, for whether a brownfield estate is ready for agentic development tooling"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Morgan Reed" }]
+dependencies = [
+    "click>=8.1",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff==0.6.9",
+]
+
+[project.scripts]
+brownfield-scan = "brownfield_readiness.cli:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+# Pinned explicitly rather than left to ruff's defaults: the default rule set
+# changes between releases, which turns a green build red without a commit.
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+# The fixture repositories are inputs to the scanner, not source code. Several
+# of them are deliberately shabby -- unpinned dependencies, an end-of-support
+# runtime, no tests -- because that is what they exist to demonstrate. Linting
+# them would either fail the build or pressure them into being tidier than the
+# estate they represent.
+extend-exclude = ["fixtures"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # import sorting
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "A",   # builtin shadowing
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --cov=brownfield_readiness --cov-report=term-missing --cov-fail-under=95"
